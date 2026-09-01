@@ -138,12 +138,19 @@ export function TodayView({
       <div className="mt-10 border-t pt-8" style={{ borderColor: 'var(--line)' }}>
         <SectionLabel>📎 SCHEDULE</SectionLabel>
         {calendarConnected ? (
-          <ScheduleList events={todayEvents} emptyText={pickEmptyCopy('scheduleToday')} onAddTask={onAddTaskFromEvent} />
+          calendar.isSyncing && calendar.events.length === 0 ? (
+            <p className="font-hand py-8 text-center text-xl" style={{ color: 'var(--ink-dim)' }}>
+              loading your schedule…
+            </p>
+          ) : (
+            <ScheduleList events={todayEvents} emptyText={pickEmptyCopy('scheduleToday')} onAddTask={onAddTaskFromEvent} />
+          )
         ) : (
           <ConnectCalendarCard
             status={calendar.status}
             error={calendar.error}
             lastSyncedAt={calendar.lastSyncedAt}
+            isSyncing={calendar.isSyncing}
             onConnect={calendar.connect}
             onDisconnect={calendar.disconnect}
             onSync={calendar.sync}

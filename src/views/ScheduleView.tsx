@@ -43,6 +43,7 @@ export function ScheduleView({ calendar, onAddTaskFromEvent }: ScheduleViewProps
         status={calendar.status}
         error={calendar.error}
         lastSyncedAt={calendar.lastSyncedAt}
+        isSyncing={calendar.isSyncing}
         onConnect={calendar.connect}
         onDisconnect={calendar.disconnect}
         onSync={calendar.sync}
@@ -54,22 +55,27 @@ export function ScheduleView({ calendar, onAddTaskFromEvent }: ScheduleViewProps
         </div>
       )}
 
-      {connected && (
-        <div className="mt-8 space-y-8">
-          <div>
-            <SectionLabel>TODAY</SectionLabel>
-            <ScheduleList events={groups.today} emptyText={pickEmptyCopy('scheduleToday')} onAddTask={onAddTaskFromEvent} />
+      {connected &&
+        (calendar.isSyncing && calendar.events.length === 0 ? (
+          <p className="font-hand py-14 text-center text-xl" style={{ color: 'var(--ink-dim)' }}>
+            loading your schedule…
+          </p>
+        ) : (
+          <div className="mt-8 space-y-8">
+            <div>
+              <SectionLabel>TODAY</SectionLabel>
+              <ScheduleList events={groups.today} emptyText={pickEmptyCopy('scheduleToday')} onAddTask={onAddTaskFromEvent} />
+            </div>
+            <div>
+              <SectionLabel dim>TOMORROW</SectionLabel>
+              <ScheduleList events={groups.tomorrow} emptyText={pickEmptyCopy('scheduleUpcoming')} onAddTask={onAddTaskFromEvent} />
+            </div>
+            <div>
+              <SectionLabel dim>UPCOMING</SectionLabel>
+              <ScheduleList events={groups.upcoming} emptyText={pickEmptyCopy('scheduleUpcoming')} onAddTask={onAddTaskFromEvent} />
+            </div>
           </div>
-          <div>
-            <SectionLabel dim>TOMORROW</SectionLabel>
-            <ScheduleList events={groups.tomorrow} emptyText={pickEmptyCopy('scheduleUpcoming')} onAddTask={onAddTaskFromEvent} />
-          </div>
-          <div>
-            <SectionLabel dim>UPCOMING</SectionLabel>
-            <ScheduleList events={groups.upcoming} emptyText={pickEmptyCopy('scheduleUpcoming')} onAddTask={onAddTaskFromEvent} />
-          </div>
-        </div>
-      )}
+        ))}
     </div>
   )
 }

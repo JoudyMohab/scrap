@@ -53,6 +53,23 @@ export async function requestAccessToken(opts: { silent?: boolean } = {}): Promi
   })
 }
 
+/** turns a thrown auth error into a short, calm, human message. */
+export function describeAuthError(err: unknown): string {
+  const code = err instanceof Error ? err.message : String(err)
+  switch (code) {
+    case 'access_denied':
+      return "access wasn't granted — nothing was connected."
+    case 'popup_closed':
+      return 'the window closed before finishing.'
+    case 'popup_failed_to_open':
+      return 'the popup was blocked — allow popups for this site and try again.'
+    case 'missing-client-id':
+      return "calendar connection isn't configured yet."
+    default:
+      return 'could not connect to google calendar.'
+  }
+}
+
 export function revokeAccessToken(token: string): Promise<void> {
   return new Promise((resolve) => {
     if (!window.google?.accounts?.oauth2) {

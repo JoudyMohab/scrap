@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CalendarEvent, GCalCalendar } from '../types'
-import { requestAccessToken, revokeAccessToken } from '../lib/googleAuth'
+import { describeAuthError, requestAccessToken, revokeAccessToken } from '../lib/googleAuth'
 import { fetchCalendarList, fetchEvents, isAuthError } from '../lib/googleCalendarApi'
 import { useLocalStorage } from './useLocalStorage'
 
@@ -13,6 +13,9 @@ export function useGoogleCalendar() {
   const [error, setError] = useState<string | null>(null)
   const [calendars, setCalendars] = useState<GCalCalendar[]>([])
   const [events, setEvents] = useState<CalendarEvent[]>([])
+  // true only while calendars/events are actively being fetched — distinct from
+  // `status`, which tracks the OAuth connection itself.
+  const [isSyncing, setIsSyncing] = useState(false)
 
   const [lastSyncedAt, setLastSyncedAt] = useLocalStorage<string | null>('tm.gcal.lastSynced', () => null)
   const [selectedCalendarIds, setSelectedCalendarIds] = useLocalStorage<string[] | null>(
@@ -36,27 +39,32 @@ export function useGoogleCalendar() {
 
   const loadCalendarsAndEvents = useCallback(
     async (token: string, calListOverride?: GCalCalendar[], idsOverride?: string[]) => {
-      const list = calListOverride ?? (await fetchCalendarList(token))
-      setCalendars(list)
+      setIsSyncing(true)
+      try {
+        const list = calListOverride ?? (await fetchCalendarList(token))
+        setCalendars(list)
 
-      let chosenIds = idsOverride ?? selectedCalendarIds
-      if (chosenIds == null) {
-        chosenIds = list.map((c) => c.id)
-        setSelectedCalendarIds(chosenIds)
+        let chosenIds = idsOverride ?? selectedCalendarIds
+        if (chosenIds == null) {
+          chosenIds = list.map((c) => c.id)
+          setSelectedCalendarIds(chosenIds)
+        }
+        const chosen = list.filter((c) => chosenIds!.includes(c.id))
+
+        const timeMin = new Date()
+        timeMin.setHours(0, 0, 0, 0)
+        const timeMax = new Date(timeMin)
+        timeMax.setDate(timeMax.getDate() + SYNC_RANGE_DAYS)
+
+        const results = await Promise.all(
+          chosen.map((c) => fetchEvents(token, c, timeMin.toISOString(), timeMax.toISOString()).catch(() => [])),
+        )
+        setEvents(results.flat())
+        setLastSyncedAt(new Date().toISOString())
+        setError(null)
+      } finally {
+        setIsSyncing(false)
       }
-      const chosen = list.filter((c) => chosenIds!.includes(c.id))
-
-      const timeMin = new Date()
-      timeMin.setHours(0, 0, 0, 0)
-      const timeMax = new Date(timeMin)
-      timeMax.setDate(timeMax.getDate() + SYNC_RANGE_DAYS)
-
-      const results = await Promise.all(
-        chosen.map((c) => fetchEvents(token, c, timeMin.toISOString(), timeMax.toISOString()).catch(() => [])),
-      )
-      setEvents(results.flat())
-      setLastSyncedAt(new Date().toISOString())
-      setError(null)
     },
     [selectedCalendarIds, setSelectedCalendarIds, setLastSyncedAt],
   )
@@ -69,9 +77,9 @@ export function useGoogleCalendar() {
       setEverConnected(true)
       setStatus('connected')
       await loadCalendarsAndEvents(token)
-    } catch {
+    } catch (err) {
       setStatus('disconnected')
-      setError('could not connect to google calendar.')
+      setError(describeAuthError(err))
     }
   }, [ensureToken, loadCalendarsAndEvents, setEverConnected])
 
@@ -84,8 +92,10 @@ export function useGoogleCalendar() {
       if (isAuthError(err)) {
         setStatus('disconnected')
         setEverConnected(false)
+        setError(describeAuthError(err))
+      } else {
+        setError('the calendar refused to cooperate.')
       }
-      setError('the calendar refused to cooperate.')
     }
   }, [ensureToken, loadCalendarsAndEvents, calendars, setEverConnected])
 
@@ -130,6 +140,7 @@ export function useGoogleCalendar() {
   return {
     status,
     error,
+    isSyncing,
     calendars,
     events,
     selectedCalendarIds: selectedCalendarIds ?? calendars.map((c) => c.id),

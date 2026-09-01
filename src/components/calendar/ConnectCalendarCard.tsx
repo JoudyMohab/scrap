@@ -5,6 +5,7 @@ interface ConnectCalendarCardProps {
   status: GCalStatus
   error: string | null
   lastSyncedAt: string | null
+  isSyncing?: boolean
   onConnect: () => void
   onDisconnect: () => void
   onSync: () => void
@@ -15,6 +16,7 @@ export function ConnectCalendarCard({
   status,
   error,
   lastSyncedAt,
+  isSyncing,
   onConnect,
   onDisconnect,
   onSync,
@@ -31,10 +33,16 @@ export function ConnectCalendarCard({
         <span className="text-sm" style={{ color: 'var(--ink)' }}>
           Google Calendar connected <span style={{ color: 'var(--accent)' }}>✓</span>
         </span>
-        {lastSyncedAt && (
-          <span className="text-xs" style={{ color: 'var(--ink-dim)' }}>
-            synced {formatRelativeShort(lastSyncedAt)}
+        {isSyncing ? (
+          <span className="font-hand text-base" style={{ color: 'var(--ink-dim)' }}>
+            loading your schedule…
           </span>
+        ) : (
+          lastSyncedAt && (
+            <span className="text-xs" style={{ color: 'var(--ink-dim)' }}>
+              synced {formatRelativeShort(lastSyncedAt)}
+            </span>
+          )
         )}
         <div className="ml-auto flex items-center gap-3">
           <button onClick={onSync} className="text-xs underline decoration-dotted underline-offset-2" style={{ color: 'var(--ink-dim)' }}>
