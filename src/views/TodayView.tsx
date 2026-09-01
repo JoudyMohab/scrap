@@ -52,17 +52,19 @@ export function TodayView({
     [tasks],
   )
 
+  const calendarConnected = calendar.status === 'connected'
+
   const todayEvents = useMemo(
     () =>
-      calendarEvents
+      calendar.events
         .filter((e) => e.start.slice(0, 10) === todayISO())
         .sort((a, b) => a.start.localeCompare(b.start)),
-    [calendarEvents],
+    [calendar.events],
   )
 
   const availability = useMemo(
-    () => (calendarConnected ? computeAvailability(calendarEvents) : null),
-    [calendarConnected, calendarEvents],
+    () => (calendarConnected ? computeAvailability(calendar.events) : null),
+    [calendarConnected, calendar.events],
   )
 
   const moodTasks = useMemo(() => (mood ? tasksForMood(mood, tasks, availability) : []), [mood, tasks, availability])
@@ -139,14 +141,16 @@ export function TodayView({
           <ScheduleList events={todayEvents} emptyText={pickEmptyCopy('scheduleToday')} onAddTask={onAddTaskFromEvent} />
         ) : (
           <ConnectCalendarCard
-            status="disconnected"
-            error={null}
-            lastSyncedAt={null}
-            onConnect={() => {}}
-            onDisconnect={() => {}}
-            onSync={() => {}}
+            status={calendar.status}
+            error={calendar.error}
+            lastSyncedAt={calendar.lastSyncedAt}
+            onConnect={calendar.connect}
+            onDisconnect={calendar.disconnect}
+            onSync={calendar.sync}
             compact
           />
         )}
       </div>
-    <
+    </div>
+  )
+}

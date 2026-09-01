@@ -108,8 +108,7 @@ function App() {
           name={USER_NAME}
           tasks={store.tasks}
           categoryById={store.categoryById}
-          calendarEvents={calendar.events}
-          calendarConnected={calendar.status === 'connected'}
+          calendar={calendar}
           onAddTaskFromEvent={openNewTaskFromEvent}
           {...rowHandlers}
         />
