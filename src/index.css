@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-hand: 'Caveat', cursive;
+
+  --color-ink: #111111;
+  --color-cherry: #6e0718;
+  --color-wine: #800020;
+  --color-paper: #e8dfd2;
+  --color-muted: #9b9690;
+
+  --color-paper-light: #f4efe6;
+  --color-ink-soft: #1a1a1a;
+}
+
+:root {
+  color-scheme: dark;
+  --bg-0: var(--color-ink);
+  --bg-1: #171514;
+  --bg-2: #1d1a19;
+  --line: rgba(232, 223, 210, 0.14);
+  --line-strong: rgba(232, 223, 210, 0.24);
+  --ink: var(--color-paper);
+  --ink-dim: var(--color-muted);
+  --accent: var(--color-cherry);
+  --accent-2: var(--color-wine);
+  --accent-soft: rgba(110, 7, 24, 0.28);
+  --shadow-pop: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+}
+
+:root.light {
+  color-scheme: light;
+  --bg-0: var(--color-paper-light);
+  --bg-1: #ece5d8;
+  --bg-2: #e4dccb;
+  --line: rgba(17, 17, 17, 0.12);
+  --line-strong: rgba(17, 17, 17, 0.22);
+  --ink: #211d1a;
+  --ink-dim: #6f6a62;
+  --accent: var(--color-wine);
+  --accent-2: var(--color-cherry);
+  --accent-soft: rgba(128, 0, 32, 0.14);
+  --shadow-pop: 0 10px 30px -14px rgba(0, 0, 0, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-0);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+/* subtle paper grain, sits behind everything */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--color-paper);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 8px;
+}
+
+.font-hand {
+  font-family: var(--font-hand);
+}
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* handwritten strike-through for completed tasks */
+.strike-path {
+  stroke: currentColor;
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 240;
+  stroke-dashoffset: 240;
+}
+.strike-animate .strike-path {
+  animation: strike-draw 0.42s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+@keyframes strike-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* tiny stamp pop-in */
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.7) rotate(var(--stamp-rot, -8deg));
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.92) rotate(var(--stamp-rot, -8deg));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(var(--stamp-rot, -8deg));
+  }
+}
+.stamp-pop {
+  animation: stamp-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.washi {
+  position: relative;
+}
+.washi::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 64px;
+  height: 20px;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(232, 223, 210, 0.55),
+    rgba(232, 223, 210, 0.55) 3px,
+    rgba(232, 223, 210, 0.4) 3px,
+    rgba(232, 223, 210, 0.4) 6px
+  );
+  opacity: 0.55;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+@media print {
+  .grain {
+    display: none;
+  }
+}
